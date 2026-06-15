@@ -1,0 +1,71 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: propselect-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: propselect
+      POSTGRES_USER: propselect
+      POSTGRES_PASSWORD: propselect
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: propselect-chromadb
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: propselect-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  backend:
+    build:
+      context: ./backend
+    container_name: propselect-api
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - chromadb
+      - ollama
+    environment:
+      DATABASE_URL: postgresql://propselect:propselect@postgres:5432/propselect
+      CHROMA_HOST: chromadb
+      CHROMA_PORT: 8000
+      OLLAMA_URL: http://ollama:11434
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data/artigos:/app/data/artigos
+      - ./data/planilhas:/app/data/planilhas
+      - ./data/pdf_gerados:/app/data/pdf_gerados
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: propselect-ui
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data/pdf_gerados:/app/data/pdf_gerados
+
+volumes:
+  postgres_data:
+  chroma_data:
+  ollama_data:
