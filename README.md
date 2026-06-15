@@ -4,7 +4,7 @@
 
 O **PropSelectAI** é um sistema inteligente focado na otimização e auxílio da seleção de hélices aeronáuticas. A ferramenta facilita a escolha de propulsores através do cruzamento de parâmetros de voo (potência, RPM, entre outros) e enriquece a experiência utilizando Inteligência Artificial via RAG (*Retrieval-Augmented Generation*). 
 
-Desta forma, o sistema não apenas filtra a melhor recomendação em um banco de dados estruturado, mas também elabora uma justificativa técnica embasada na literatura acadêmica e manuais do setor, podendo gerar um relatório técnico final detalhado (Preliminary Design Review - PDR).
+Desta forma, o sistema não apenas filtra a melhor recomendação em um banco de dados estruturado, mas também elabora uma justificativa técnica embasada na literatura acadêmica e manuais do setor, podendo gerar um relatório técnico final detalhado.
 
 ### Arquitetura do Projeto
 A arquitetura baseia-se em serviços independentes orquestrados via Docker Compose:
