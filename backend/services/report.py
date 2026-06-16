@@ -1,8 +1,11 @@
 import os
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
 import uuid
-import textwrap
+from xml.sax.saxutils import escape
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER, TA_LEFT
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.units import cm
 
 def generate_pdf_report(request_data, recommendations, references):
     report_id = str(uuid.uuid4())[:8]
@@ -15,64 +18,120 @@ def generate_pdf_report(request_data, recommendations, references):
         
     filepath = os.path.join(output_dir, filename)
 
-    # ABNT: Margem esquerda 3cm (~85 pt), Margem direita 2cm (~56 pt)
-    # A4 size: 595.27 x 841.89
-    left_margin = 85
+    # ABNT: Margem esquerda 3cm, Margem superior 3cm, Margem direita 2cm, Margem inferior 2cm
+    doc = SimpleDocTemplate(
+        filepath,
+        pagesize=A4,
+        rightMargin=2*cm,
+        leftMargin=3*cm,
+        topMargin=3*cm,
+        bottomMargin=2*cm
+    )
+
+    styles = getSampleStyleSheet()
     
-    c = canvas.Canvas(filepath, pagesize=A4)
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(left_margin, 780, "PropSelectAI - Relatório de Decisão de Projeto")
+    title_style = ParagraphStyle(
+        "TitleStyle",
+        parent=styles['Heading1'],
+        fontName="Helvetica-Bold",
+        fontSize=16,
+        spaceAfter=20,
+        alignment=TA_CENTER
+    )
     
-    c.setFont("Helvetica", 12)
-    c.drawString(left_margin, 750, f"Missão: {request_data.mission_type}")
-    c.drawString(left_margin, 730, f"Peso: {request_data.weight_kg} kg | Potência: {request_data.engine_power_hp} HP")
+    info_style = ParagraphStyle(
+        "InfoStyle",
+        parent=styles['Normal'],
+        fontName="Helvetica",
+        fontSize=12,
+        spaceAfter=5
+    )
     
-    y = 690
-    c.setFont("Helvetica-Bold", 14)
-    c.drawString(left_margin, y, "Hélices Recomendadas:")
-    y -= 30
+    bold_style = ParagraphStyle(
+        "BoldHeading",
+        parent=styles['Normal'],
+        fontName="Helvetica-Bold",
+        fontSize=14,
+        spaceBefore=20,
+        spaceAfter=10
+    )
     
-    c.setFont("Helvetica", 11)
+    rec_title_style = ParagraphStyle(
+        "RecTitle",
+        parent=styles['Normal'],
+        fontName="Helvetica-Bold",
+        fontSize=12,
+        spaceBefore=15,
+        spaceAfter=5
+    )
+    
+    rec_data_style = ParagraphStyle(
+        "RecData",
+        parent=styles['Normal'],
+        fontName="Helvetica",
+        fontSize=11,
+        leftIndent=20,
+        spaceAfter=5
+    )
+    
+    justified_indent_style = ParagraphStyle(
+        "JustifiedIndent",
+        parent=styles['Normal'],
+        fontName="Helvetica",
+        fontSize=11,
+        alignment=TA_JUSTIFY,
+        leftIndent=20,
+        spaceAfter=10
+    )
+    
+    ref_style = ParagraphStyle(
+        "RefStyle",
+        parent=styles['Normal'],
+        fontName="Helvetica",
+        fontSize=10,
+        alignment=TA_JUSTIFY,
+        spaceAfter=10
+    )
+
+    story = []
+    
+    # Header
+    story.append(Paragraph("PropSelectAI - Relatório de Decisão de Projeto", title_style))
+    
+    # Escaping any dynamic user/DB content is safer when using Paragraphs
+    mission_safe = escape(str(request_data.mission_type))
+    weight_safe = escape(str(request_data.weight_kg))
+    power_safe = escape(str(request_data.engine_power_hp))
+    
+    story.append(Paragraph(f"<b>Missão:</b> {mission_safe}", info_style))
+    story.append(Paragraph(f"<b>Peso:</b> {weight_safe} kg | <b>Potência:</b> {power_safe} HP", info_style))
+    story.append(Spacer(1, 10))
+    
+    # Recommendations
+    story.append(Paragraph("Hélices Recomendadas:", bold_style))
+    
     for idx, rec in enumerate(recommendations):
-        c.drawString(left_margin, y, f"{idx+1}. {rec.name}")
-        c.drawString(left_margin + 20, y-15, f"Eficiência: {rec.efficiency:.2f} | Empuxo: {rec.thrust:.2f} N | Diâmetro: {rec.diameter}")
+        rec_name_safe = escape(str(rec.name))
+        story.append(Paragraph(f"{idx+1}. {rec_name_safe}", rec_title_style))
         
-        lines = textwrap.wrap(f"Justificativa: {rec.justification}", width=80)
-        y_just = y - 30
-        for line in lines:
-            c.drawString(left_margin + 20, y_just, line)
-            y_just -= 15
-            
-        y = y_just - 20
+        data_text = f"Eficiência: {rec.efficiency:.2f} | Empuxo: {rec.thrust:.2f} N | Diâmetro: {escape(str(rec.diameter))}"
+        story.append(Paragraph(data_text, rec_data_style))
         
-        if y < 100:
-            c.showPage()
-            y = 780
-
-
-    # Referências Bibliográficas
-    y -= 20
-    if y < 100:
-        c.showPage()
-        y = 780
+        justification_text = f"<b>Justificativa:</b> {escape(rec.justification)}"
+        story.append(Paragraph(justification_text, justified_indent_style))
         
-    c.setFont("Helvetica-Bold", 14)
-    c.drawString(left_margin, y, "Referências Bibliográficas (Padrão ABNT):")
-    y -= 30
+    story.append(Spacer(1, 15))
     
-    c.setFont("Helvetica", 10)
+    # References
+    story.append(Paragraph("Referências Bibliográficas (Padrão ABNT):", bold_style))
+    
     for ref in references:
-        ref_lines = textwrap.wrap(ref, width=85)
-        for line in ref_lines:
-            if y < 50:
-                c.showPage()
-                c.setFont("Helvetica", 10)
-                y = 780
-            c.drawString(left_margin, y, line)
-            y -= 15
-        y -= 10 
+        story.append(Paragraph(escape(ref), ref_style))
 
-    c.save()
+    # Generate the PDF Document
+    doc.build(story)
+    
     return filename
+
 
 

@@ -49,9 +49,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./data/artigos:/app/data/artigos
-      - ./data/planilhas:/app/data/planilhas
-      - ./data/pdf_gerados:/app/data/pdf_gerados
+      - ./data:/app/data
 
   frontend:
     build:
