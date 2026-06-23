@@ -71,6 +71,12 @@ Um utilitário simples em forma de script de teste (scratch). Ele pode ser rodad
 docker compose exec backend uv run python scripts/analyze_sheets.py
 ```
 
+### D. Remoção de dados inconsistentes no banco de dados
+
+```
+docker compose exec postgres psql -U propselect -d propselect -c "DELETE FROM propeller_data WHERE trust_n = '0' OR torque_nm = '0' OR ct = '0' OR cp = '0' rotacao_rpm = '0'"
+```
+
 ---
 
 ## Dicas Adicionais

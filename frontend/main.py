@@ -9,11 +9,10 @@ st.write("Insira os parâmetros do projeto de aeronave para receber as melhores 
 
 with st.sidebar:
     st.header("Parâmetros do Projeto")
-    mission_type = st.selectbox("Tipo de Missão", ["Transporte", "Acrobacia", "VANT / Drone", "Treinamento"])
-    weight_kg = st.number_input("Peso da Aeronave (kg)", min_value=0.1, value=1000.0)
-    engine_power_hp = st.number_input("Potência do Motor (HP)", min_value=1.0, value=150.0)
-    cruise_speed_ms = st.number_input("Velocidade de Cruzeiro (m/s)", min_value=1.0, value=50.0)
-    altitude_m = st.number_input("Altitude (m)", min_value=0.0, value=1000.0)
+    mission_type = st.selectbox("Tipo de missão:", ["Transporte", "Acrobacia", "VANT / Drone"])
+    weight_kg = st.number_input("Peso da Aeronave (kg)", min_value=0.1, value=10.0)
+    engine_power_hp = st.number_input("Potência do Motor (HP)", min_value=0.0001, value=1.0, step=0.0001, format="%0.4f")
+    cruise_speed_ms = st.number_input("Velocidade de Cruzeiro (m/s)", min_value=0.1, value=0.5)
     max_diameter = st.number_input("Diâmetro Máximo (Opcional - polegadas)", min_value=0.0, value=0.0)
 
 if st.button("Buscar Recomendações", type="primary"):
@@ -22,8 +21,7 @@ if st.button("Buscar Recomendações", type="primary"):
             "weight_kg": weight_kg,
             "engine_power_hp": engine_power_hp,
             "cruise_speed_ms": cruise_speed_ms,
-            "altitude_m": altitude_m,
-            "mission_type": mission_type,
+            "mission_type": mission_type
         }
         if max_diameter > 0:
             payload["max_diameter_inches"] = max_diameter
@@ -36,7 +34,7 @@ if st.button("Buscar Recomendações", type="primary"):
             
             if res.status_code == 200:
                 data = res.json()
-                st.success("Recomendações e PDR gerados com sucesso!")
+                st.success("Recomendações geradas com sucesso!")
                 
                 recs = data.get("recommendations", [])
                 for i, rec in enumerate(recs):
@@ -55,7 +53,7 @@ if st.button("Buscar Recomendações", type="primary"):
                     if os.path.exists(local_pdf):
                         with open(local_pdf, "rb") as pdf_file:
                             st.download_button(
-                                label="📥 Baixar Relatório (PDR) Completo",
+                                label="📥 Baixar Relatório Completo",
                                 data=pdf_file,
                                 file_name=filename,
                                 mime="application/pdf"

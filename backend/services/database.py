@@ -10,17 +10,16 @@ def get_filtered_propellers(thrust_req, min_efficiency, max_diameter=None):
     numeric_pattern = r'^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$'
     
     query = f"""
-    SELECT * FROM propeller_data
-    WHERE "trust_n" ~ '{numeric_pattern}'
-    AND CAST("trust_n" AS float) >= {thrust_req}
-    AND "eficiência" ~ '{numeric_pattern}'
-    AND CAST("eficiência" AS float) >= {min_efficiency}
+    SELECT * FROM (SELECT DISTINCT ON (nome_helice) * 
+    FROM propeller_data
+        WHERE "trust_n" ~ '{numeric_pattern}'
+        AND CAST("trust_n" AS float) >= {thrust_req}
+        AND "eficiência" ~ '{numeric_pattern}'
+        AND CAST("eficiência" AS float) >= {min_efficiency} AND CAST("eficiência" AS float) < 1.0
+        {f" AND \"diametro\" ~ '{numeric_pattern}' AND CAST(\"diametro\" AS float) <= {max_diameter}" if max_diameter else ""}
     """
     
-    if max_diameter:
-        query += f" AND \"diametro\" ~ '{numeric_pattern}' AND CAST(\"diametro\" AS float) <= {max_diameter}"
-        
-    query += f" ORDER BY CAST(\"eficiência\" AS float) DESC LIMIT 10"
+    query += f"ORDER BY nome_helice, CAST(eficiência AS float) DESC) sub  ORDER BY CAST(\"eficiência\" AS float) DESC LIMIT 5"
 
     
     try:
