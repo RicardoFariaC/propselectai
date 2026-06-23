@@ -20,12 +20,15 @@ def recommend_propellers(request: PropellerRequest):
     for prop in top_propellers:
         justification_text, local_ref_map = generate_justification(prop, request)
         
+        # Garantir que TODAS as referências locais sejam listadas, mesmo que o LLM não cite
+        for local_idx, ref_str in local_ref_map.items():
+            if ref_str not in global_reference_map:
+                global_reference_map[ref_str] = len(global_reference_map) + 1
+        
         def replace_ref(match):
             local_idx = int(match.group(1))
             if local_idx in local_ref_map:
                 ref_str = local_ref_map[local_idx]
-                if ref_str not in global_reference_map:
-                    global_reference_map[ref_str] = len(global_reference_map) + 1
                 global_idx = global_reference_map[ref_str]
                 return f"[{global_idx}]"
             return match.group(0)

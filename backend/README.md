@@ -13,7 +13,7 @@ O projeto está organizado da seguinte forma para facilitar a manutenção e esc
 
 ### `api/`
 Armazena a definição das rotas e endpoints (controllers).
-- `router.py`: Roteador principal do FastAPI que define o endpoint `POST /api/recommend`. Responsável por orquestrar a recomendação, justificativa (RAG) e a geração de relatório PDR.
+- `router.py`: Roteador principal do FastAPI que define o endpoint `POST /api/recommend`. Responsável por orquestrar a recomendação, justificativa (RAG) e a geração de relatório.
 
 ### `models/`
 Definição dos contratos de dados (Schemas).
@@ -24,7 +24,7 @@ Contém as lógicas de negócio core, isoladas da API.
 - `database.py`: Estabelece conexão com o PostgreSQL usando `SQLAlchemy` e realiza a consulta/pesquisa das hélices com base nos filtros do usuário e expressões regulares de tratamento de texto.
 - `filters.py`: Lógica heurística e algoritmos de cálculo. Avalia o peso, a potência e a velocidade exigida para definir o requisito mínimo de empuxo.
 - `rag.py`: Responsável pela conexão com a IA utilizando LangChain e OpenAI. Faz a busca semântica na base vetorial (ChromaDB) e constrói o prompt de solicitação para a justificativa de escolha.
-- `report.py`: Responsável pela formatação técnica e geração do documento PDF (Preliminary Design Review - PDR), exportando as referências no padrão ABNT.
+- `report.py`: Responsável pela formatação técnica e geração do documento PDF (Preliminary Design Review), exportando as referências no padrão ABNT.
 
 ### `scripts/`
 Contém os utilitários de linha de comando (*one-offs*) focados em ingestão e análise off-line.

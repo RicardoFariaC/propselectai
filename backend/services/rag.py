@@ -14,16 +14,17 @@ def get_chroma_client():
 
 def generate_justification(propeller, request):
     if not OPENAI_API_KEY or OPENAI_API_KEY == "your-openai-api-key-here":
-        return "Configure a chave da API da OpenAI no arquivo .env para gerar a justificativa técnica com RAG."
+        return "Configure a chave da API da OpenAI no arquivo .env para gerar a justificativa técnica com RAG.", {}
         
     embeddings = OpenAIEmbeddings(model="text-embedding-3-small", openai_api_key=OPENAI_API_KEY)
+    mission_type = request.mission_type
+    weight = request.weight_kg
+    power = f"{request.engine_power_hp}"
+    diameter = propeller.get('diametro', 'N/A')
+    pitch = propeller.get('pitch', 'N/A')
+
     try:
         vectorstore = Chroma(client=get_chroma_client(), embedding_function=embeddings, collection_name="propellers")
-        mission_type = request.mission_type
-        weight = request.weight_kg
-        power = request.engine_power_hp
-        diameter = propeller.get('diametro', 'N/A')
-        pitch = propeller.get('pitch', 'N/A')
         
         # Query bilíngue para combater o viés de idioma do modelo de embeddings
         query = f"Hélice {propeller['nome_helice']} para missão de {mission_type}. Propeller aerodynamic characteristics and performance for {mission_type} mission."
@@ -50,13 +51,13 @@ def generate_justification(propeller, request):
                     continue
                 retrieved_parent_ids.add(doc_id)
                 parent_data = parent_docs_dict[doc_id]
-                source = parent_data['metadata'].get('source', 'Documento Desconhecido')
+                source = str(parent_data['metadata'].get('source') or 'Documento Desconhecido')
                 filename = os.path.basename(source)
                 page = parent_data['metadata'].get('page', 0)
                 content = parent_data['page_content']
             else:
                 # Fallback to standard chunk if no doc_id or missing parent file
-                source = doc.metadata.get('source', 'Documento Desconhecido')
+                source = str(doc.metadata.get('source') or 'Documento Desconhecido')
                 filename = os.path.basename(source)
                 page = doc.metadata.get('page', 0)
                 content = doc.page_content

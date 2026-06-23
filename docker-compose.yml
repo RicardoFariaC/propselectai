@@ -20,16 +20,6 @@ services:
       - "8001:8000"
     volumes:
       - chroma_data:/chroma/chroma
-
-  ollama:
-    image: ollama/ollama:latest
-    container_name: propselect-ollama
-    restart: unless-stopped
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-
   backend:
     build:
       context: ./backend
@@ -38,18 +28,17 @@ services:
     depends_on:
       - postgres
       - chromadb
-      - ollama
     environment:
       DATABASE_URL: postgresql://propselect:propselect@postgres:5432/propselect
       CHROMA_HOST: chromadb
       CHROMA_PORT: 8000
-      OLLAMA_URL: http://ollama:11434
     env_file:
       - .env
     ports:
       - "8000:8000"
     volumes:
       - ./data:/app/data
+      - ./backend:/app
 
   frontend:
     build:
@@ -62,8 +51,8 @@ services:
       - "8501:8501"
     volumes:
       - ./data/pdf_gerados:/app/data/pdf_gerados
+      - ./frontend:/app
 
 volumes:
   postgres_data:
   chroma_data:
-  ollama_data:

@@ -101,10 +101,10 @@ def generate_pdf_report(request_data, recommendations, references):
     # Escaping any dynamic user/DB content is safer when using Paragraphs
     mission_safe = escape(str(request_data.mission_type))
     weight_safe = escape(str(request_data.weight_kg))
-    power_safe = escape(str(request_data.engine_power_hp))
+    power_safe = escape(f"{request_data.engine_power_hp}")
     
     story.append(Paragraph(f"<b>Missão:</b> {mission_safe}", info_style))
-    story.append(Paragraph(f"<b>Peso:</b> {weight_safe} kg | <b>Potência:</b> {power_safe} HP", info_style))
+    story.append(Paragraph(f"<b>Peso:</b> {weight_safe} kg | <b>Potência:</b> {power_safe} HP | <b>Velocidade de Cruzeiro</b>: {request_data.cruise_speed_ms} m/s", info_style))
     story.append(Spacer(1, 10))
     
     # Recommendations
@@ -123,10 +123,13 @@ def generate_pdf_report(request_data, recommendations, references):
     story.append(Spacer(1, 15))
     
     # References
-    story.append(Paragraph("Referências Bibliográficas (Padrão ABNT):", bold_style))
-    
-    for ref in references:
-        story.append(Paragraph(escape(ref), ref_style))
+    if references:
+        story.append(Paragraph("Referências Bibliográficas (Padrão ABNT):", bold_style))
+        for ref in references:
+            story.append(Paragraph(escape(ref), ref_style))
+    else:
+        story.append(Paragraph("Referências Bibliográficas (Padrão ABNT):", bold_style))
+        story.append(Paragraph("Nenhuma referência bibliográfica disponível para esta análise.", ref_style))
 
     # Generate the PDF Document
     doc.build(story)

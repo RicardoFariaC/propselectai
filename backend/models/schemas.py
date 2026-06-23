@@ -5,7 +5,6 @@ class PropellerRequest(BaseModel):
     weight_kg: float
     engine_power_hp: float
     cruise_speed_ms: float
-    altitude_m: float
     mission_type: str
     max_diameter_inches: Optional[float] = None
 

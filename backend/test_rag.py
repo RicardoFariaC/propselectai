@@ -16,7 +16,8 @@ prop = {
 req = PropellerRequest(
     mission_type='reconhecimento',
     weight_kg=2.5,
-    engine_power_hp=1.5
+    engine_power_hp=1.0,
+    cruise_speed_ms=10.0
 )
 
 try:
